@@ -8,7 +8,7 @@ log.txt
 *.sublime-workspace
 .vscode/
 npm-debug.log*
-
+postgresql_creds.txt
 .idea/
 .ionic/
 .sourcemaps/
