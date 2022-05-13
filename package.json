@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "glee2": "file:backend"
+  }
+}
