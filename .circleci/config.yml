@@ -88,6 +88,10 @@ jobs:
     steps:
       - checkout
       - run: 
+          name: Create workspace directory
+          command: |
+             mkdir -p workspace
+      - run: 
           name: Install tar
           command: |
             yum update 
@@ -112,12 +116,12 @@ jobs:
           name: Add back-end ip to ansible inventory
           command: |
             aws ec2 describe-instances --filters Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7} --query 'Reservations[*].Instances[*].PublicIpAddress' --output text 
-            aws ec2 describe-instances --filters Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7} --query 'Reservations[*].Instances[*].PublicIpAddress' --output text >> .circleci/ansible/inventory.txt
+            aws ec2 describe-instances --filters Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7} --query 'Reservations[*].Instances[*].PublicIpAddress' --output text > workspace/backend-ip
             cat .circleci/ansible/inventory.txt
       - persist_to_workspace:
-          root: ~/
+          root: workspace
           paths:
-            - project/ansible
+            - backend-ip
       # Here's where you will add some code to rollback on failure 
   configure-infrastructure:
     docker:
@@ -130,11 +134,11 @@ jobs:
           fingerprints: ["16:1e:28:18:89:a9:13:3b:8b:05:ea:9b:e4:ac:ac:16"]
       - attach_workspace:
           # Must be absolute path or relative path from working_directory
-          at: /project/ansible               
+          at: /tmp/workspace             
       - run:
           name: Install Dependencies
           command: |
-            ls ~/project/ansible
+            cat /tmp/workspace/backend-ip
             apt update -y
             apt install -y awscli python3-pip ansible tar gzip
       - run:
