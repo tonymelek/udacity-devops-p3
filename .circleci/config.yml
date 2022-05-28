@@ -81,6 +81,73 @@ jobs:
           command: |
             cd frontend
             npm audit fix --audit-level=critical --force
+
+  deploy-infrastructure:
+    docker:
+      - image: amazon/aws-cli 
+    steps:
+      - checkout
+      - run: 
+          name: Create workspace directory
+          command: |
+             mkdir -p workspace
+      - run: 
+          name: Install tar
+          command: |
+            yum update 
+            yum install -y tar gzip
+      - run:
+          name: Ensure back-end infrastructure exists
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/backend.yml \
+              --tags project=udapeople \
+              --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
+      # - run:
+      #     name: Ensure front-end infrastructure exist
+      #     command: |
+      #       aws cloudformation deploy \
+      #         --template-file .circleci/files/frontend.yml \
+      #         --tags project=udapeople \
+      #         --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+      #         --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
+      - run:
+          name: Add back-end ip to ansible inventory
+          command: |
+            aws ec2 describe-instances --filters Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7} --query 'Reservations[*].Instances[*].PublicIpAddress' --output text 
+            aws ec2 describe-instances --filters Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7} --query 'Reservations[*].Instances[*].PublicIpAddress' --output text > workspace/backend-ip
+            cat .circleci/ansible/inventory.txt
+      - persist_to_workspace:
+          root: workspace
+          paths:
+            - backend-ip
+      # Here's where you will add some code to rollback on failure 
+  configure-infrastructure:
+    docker:
+      - image: ubuntu
+        environment:
+          DEBIAN_FRONTEND: noninteractive
+    steps:
+      - checkout 
+      - add_ssh_keys:
+          fingerprints: ["16:1e:28:18:89:a9:13:3b:8b:05:ea:9b:e4:ac:ac:16"]
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: /tmp/workspace             
+      - run:
+          name: Install Dependencies
+          command: |
+           
+            apt update -y
+            apt install -y awscli python3-pip ansible tar gzip
+      - run:
+          name: Configure server
+          command: |
+              cat /tmp/workspace/backend-ip >> .circleci/ansible/inventory.txt 
+              ansible-playbook -i .circleci/ansible/inventory.txt  .circleci/ansible/configure-server.yml 
+
+      # Here's where you will add some code to rollback on failure                      
 workflows:
   default:
     jobs:
@@ -98,3 +165,7 @@ workflows:
       - scan-frontend:
           requires:
             - build-frontend
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]                 
