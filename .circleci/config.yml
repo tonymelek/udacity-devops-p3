@@ -133,7 +133,7 @@ jobs:
           name: Install Dependencies
           command: |
             apt update -y
-            apt install -y awcli python3-pip ansible tar gzip
+            apt install -y awscli python3-pip ansible tar gzip
       - run:
           name: Configure server
           command: |
