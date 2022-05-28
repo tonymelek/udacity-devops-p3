@@ -116,7 +116,30 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
-      # Here's where you will add some code to rollback on failure             
+      # Here's where you will add some code to rollback on failure 
+  configure-infrastructure:
+    docker:
+      - image: ubuntu
+        environment:
+          DEBIAN_FRONTEND: noninteractive
+    steps:
+      - checkout 
+      - add_ssh_keys:
+          fingerprints: ["16:1e:28:18:89:a9:13:3b:8b:05:ea:9b:e4:ac:ac:16"]
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: project/.circleci/ansible/inventory.txt                  
+      - run:
+          name: Install Dependencies
+          command: |
+            apt update -y
+            apt install -y awcli python3-pip ansible tar gzip
+      - run:
+          name: Configure server
+          command: |
+              ansible-playbook -i project/.circleci/ansible/inventory.txt  .circleci/ansible/configure-server.yml 
+
+      # Here's where you will add some code to rollback on failure                      
 workflows:
   default:
     jobs:
@@ -135,4 +158,6 @@ workflows:
           requires:
             - build-frontend
       - deploy-infrastructure:
-          requires: [test-frontend, test-backend, scan-frontend, scan-backend]            
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+       - configure-infrastructure:
+          requires: [deploy-infrastructure]                 
