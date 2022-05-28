@@ -117,7 +117,7 @@ jobs:
       - persist_to_workspace:
           root: ~/
           paths:
-            - project/.circleci/ansible/inventory.txt
+            - project/ansible
       # Here's where you will add some code to rollback on failure 
   configure-infrastructure:
     docker:
@@ -130,11 +130,11 @@ jobs:
           fingerprints: ["16:1e:28:18:89:a9:13:3b:8b:05:ea:9b:e4:ac:ac:16"]
       - attach_workspace:
           # Must be absolute path or relative path from working_directory
-          at: /project/.circleci/ansible/inventory.txt                  
+          at: /project/ansible               
       - run:
           name: Install Dependencies
           command: |
-            cat /project/.circleci/ansible/inventory.txt
+            ls ~/project/ansible
             apt update -y
             apt install -y awscli python3-pip ansible tar gzip
       - run:
