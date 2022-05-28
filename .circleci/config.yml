@@ -90,7 +90,7 @@ jobs:
       - run: 
           name: Install tar
           command: |
-            yum uddate 
+            yum update 
             yum install -y tar gzip
       - run:
           name: Ensure back-end infrastructure exists
