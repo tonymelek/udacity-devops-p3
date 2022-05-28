@@ -134,6 +134,7 @@ jobs:
       - run:
           name: Install Dependencies
           command: |
+            cat project/.circleci/ansible/inventory.txt
             apt update -y
             apt install -y awscli python3-pip ansible tar gzip
       - run:
