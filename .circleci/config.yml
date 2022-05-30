@@ -221,7 +221,7 @@ jobs:
             echo ====================================
             ls -a
             echo ====================================
-            cp artifact.tar.gz ansible/roles/deploy/files/
+            cp artifact.tar.gz ansible/roles/deploy/files
             ls ansible/roles/deploy/files
             echo ====================================
             cat /tmp/workspace/backend-ip >> ansible/inventory.txt 
