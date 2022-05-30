@@ -219,7 +219,45 @@ jobs:
             cd ..
             tar -C backend -czvf artifact.tar.gz .
             cat /tmp/workspace/backend-ip >> .circleci/ansible/inventory.txt 
-            ansible-playbook -i .circleci/ansible/inventory.txt  .circleci/ansible/deploy-backend.yml                        
+            ansible-playbook -i .circleci/ansible/inventory.txt  .circleci/ansible/deploy-backend.yml  
+  smoke-test:
+    docker:
+      - image: alpine
+    steps:
+      - run:
+          name: Install dependencies
+          command: |
+            apk add aws-cli nodejs npm curl
+      - attach_workspace:
+          at: /tmp/workspace   
+      - run:
+          name: Get backend url
+          command: |
+            BACKEND_IP=$(cat /tmp/workspace/backend-ip)
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+      - run:
+          name: Backend smoke test.
+          command: |
+            if curl "${API_URL}/api/status" | grep "ok"
+            then
+                return 0
+            else
+                return 1
+            fi
+      - run:
+          name: Frontend smoke test.
+          command: |
+              URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/#/employees"            
+              echo ${URL} 
+              if curl -s ${URL} | grep "Welcome"
+              then
+                echo success
+                return 1
+              else
+                echo fail
+                return 1
+              fi                                
 workflows:
   default:
     jobs:
