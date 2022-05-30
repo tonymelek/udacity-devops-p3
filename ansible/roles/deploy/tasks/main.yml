@@ -1,7 +1,7 @@
 ---
 - name: Create Directory to extract the zipped file
   shell: |
-        mkdir backend
+    mkdir backend
 
 - name: Copy files
   copy:
@@ -10,11 +10,11 @@
 
 - name: unzip artifacts
   shell: |
-      tar -xvzf /home/ubuntu/backend/artifact.tar.gz
+    tar -xvzf /home/ubuntu/backend/artifact.tar.gz
 
 - name: Install dependencies and start
   shell: |
-          cd backend
-          npm run start:prod
-          pm2 stop default
-          pm2 start npm -- start
+    npm i 
+    npm run build
+    pm2 stop default
+    pm2 start npm -- start
