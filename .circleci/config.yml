@@ -140,8 +140,8 @@ jobs:
       - run:
           name: Configure server
           command: |
-              cat /tmp/workspace/backend-ip >> .circleci/ansible/inventory.txt 
-              ansible-playbook -i .circleci/ansible/inventory.txt  .circleci/ansible/configure-server.yml      
+              cat /tmp/workspace/backend-ip >> ansible/inventory.txt 
+              ansible-playbook -i ansible/inventory.txt  ansible/configure-server.yml      
   run-migrations:
     docker:
       - image: node
@@ -218,8 +218,14 @@ jobs:
             npm run build
             cd ..
             tar -C backend -czvf artifact.tar.gz .
-            cat /tmp/workspace/backend-ip >> .circleci/ansible/inventory.txt 
-            ansible-playbook -i .circleci/ansible/inventory.txt  .circleci/ansible/deploy-backend.yml  
+            echo ====================================
+            ls -a
+            echo ====================================
+            cp artifact.tar.gz ansible/roles/deploy/files
+            ls ansible/roles/deploy/files
+            echo ====================================
+            cat /tmp/workspace/backend-ip >> ansible/inventory.txt 
+            ansible-playbook -i ansible/inventory.txt  ansible/deploy-backend.yml  
   smoke-test:
     docker:
       - image: alpine
@@ -239,7 +245,9 @@ jobs:
       - run:
           name: Backend smoke test.
           command: |
-            if curl "${API_URL}/api/status" | grep "ok"
+            URL="${API_URL}"/api/status
+            echo URL
+            if curl "${API_URL}"/api/status | grep "ok"
             then
                 return 0
             else
