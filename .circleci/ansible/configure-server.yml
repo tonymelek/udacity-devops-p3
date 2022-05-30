@@ -18,7 +18,7 @@
     - name: "install python for Ansible."
       register: aptinstall
       apt: 
-        name: [python3-pip, ansible,nodejs,npm]
+        name: [python3-pip, ansible,nodejs,npm,tar,gzip]
         state: latest
         update_cache: yes
 
