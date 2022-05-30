@@ -221,7 +221,7 @@ jobs:
             echo ====================================
             ls -a
             echo ====================================
-            cp artifact.tar.gz "$(echo pwd)"/.circleci/ansible/roles/deploy/files
+            cp artifact.tar.gz "$(pwd)"/.circleci/ansible/roles/deploy/files
             echo ====================================
             cat /tmp/workspace/backend-ip >> .circleci/ansible/inventory.txt 
             ansible-playbook -i .circleci/ansible/inventory.txt  .circleci/ansible/deploy-backend.yml  
