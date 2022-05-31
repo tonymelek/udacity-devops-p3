@@ -213,10 +213,6 @@ jobs:
       - run:
           name: Deploy backend
           command: |
-            cd backend
-            npm i
-            npm run build
-            cd ..
             tar -C backend -czvf artifact.tar.gz .
             echo ====================================
             ls -a
