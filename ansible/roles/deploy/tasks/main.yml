@@ -15,5 +15,5 @@
 - name: Install dependencies and start
   shell: |
     npm i 
-    nom run build
-    npm run start:prod
+    npm run build
+    npm run start
