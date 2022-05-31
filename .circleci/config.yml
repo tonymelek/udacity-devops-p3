@@ -238,8 +238,8 @@ jobs:
             BACKEND_IP=$(cat /tmp/workspace/backend-ip)
             API_URL=http://"${BACKEND_IP}":3030/api/status
             echo "${API_URL}"
-            curl "${API_URL}"
             sleep 30
+            curl "${API_URL}"
             if curl "${API_URL}" | grep "ok"
             then
                 return 0
