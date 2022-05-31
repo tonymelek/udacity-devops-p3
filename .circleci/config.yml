@@ -233,17 +233,11 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - run:
-          name: Get backend url
-          command: |
-            BACKEND_IP=$(cat /tmp/workspace/backend-ip)
-            export API_URL="http://${BACKEND_IP}:3030"
-            echo "${API_URL}"
-      - run:
           name: Backend smoke test.
           command: |
-            URL="$(printenv API_URL)"/api/status
-            echo "${URL}"
-            if curl "${URL}" | grep "ok"
+            BACKEND_IP=$(cat /tmp/workspace/backend-ip)
+            API_URL="http://${BACKEND_IP}:3030/api/status"
+            if curl "${API_URL}" | grep "ok"
             then
                 return 0
             else
