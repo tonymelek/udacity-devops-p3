@@ -121,6 +121,9 @@ jobs:
           command: |
             mkdir -p workspace
       - run:
+          name: add old workflow id to workspace
+          command: aws cloudformation list-exports --query "Exports[?Name=='WorkflowID'].Value" --no-paginate --output text >/workspace/old-id
+      - run:
           name: Install tar
           command: |
             yum update 
@@ -149,6 +152,7 @@ jobs:
           root: workspace
           paths:
             - backend-ip
+            - old-id
       - destroy-environment
   configure-infrastructure:
     docker:
@@ -213,12 +217,12 @@ jobs:
             BACKEND_IP="$(cat /tmp/workspace/backend-ip)"
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
-            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
-            cat frontend/.env
+            echo API_URL="http://${BACKEND_IP}:3030" > frontend/.env
       - run:
           name: Deploy frontend objects
           command: |
             cd frontend
+            cat .env
             npm install
             npm run build
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
@@ -302,6 +306,9 @@ jobs:
             aws cloudformation deploy --template-file .circleci/files/cloudfront.yml --stack-name udaPeople \
             --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
             --tags project=udapeople
+            aws cloudfront create-invalidation \
+              --distribution-id EMVR37B4ASY2Z \
+              --paths "/*"
             echo old stack name= udaPeople
             echo current workflow_id= "${CIRCLE_WORKFLOW_ID:0:7}"
       - destroy-environment
@@ -312,10 +319,12 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
+      - attach_workspace:
+          at: /tmp/workspace
       - run:
           name: Remove old stacks and files
           command: |
-            export OLD_WORKFLOW_ID=$(aws cloudformation list-exports --query "Exports[?Name=='WorkflowID'].Value" --no-paginate --output text)
+            export OLD_WORKFLOW_ID=$(cat /tmp/workspace/old-id)
             export NEW_WORKFLOW_ID="${CIRCLE_WORKFLOW_ID:0:7}"
             echo $OLD_WORKFLOW_ID
             echo $NEW_WORKFLOW_ID
