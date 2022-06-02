@@ -319,6 +319,10 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
+      - run:
+          name: Install Dependencies
+          command: |
+            apk add tar gzip
       - attach_workspace:
           at: /tmp/workspace
       - run:
