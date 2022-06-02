@@ -122,7 +122,7 @@ jobs:
             mkdir -p workspace
       - run:
           name: add old workflow id to workspace
-          command: aws cloudformation list-exports --query "Exports[?Name=='WorkflowID'].Value" --no-paginate --output text >/workspace/old-id
+          command: aws cloudformation list-exports --query "Exports[?Name=='WorkflowID'].Value" --no-paginate --output text > workspace/old-id
       - run:
           name: Install tar
           command: |
