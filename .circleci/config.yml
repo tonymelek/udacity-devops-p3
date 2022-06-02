@@ -322,7 +322,8 @@ jobs:
       - run:
           name: Install Dependencies
           command: |
-            apk add tar gzip
+            yum update 
+            yum install -y tar gzip
       - attach_workspace:
           at: /tmp/workspace
       - run:
