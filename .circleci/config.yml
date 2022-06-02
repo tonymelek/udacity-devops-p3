@@ -243,10 +243,11 @@ jobs:
           name: Install Dependencies
           command: |
             apt update -y
-            apt install -y npm python3-pip ansible tar gzip
+            apt install -y npm python3-pip ansible tar gzip awscli
       - run:
           name: Deploy backend
           command: |
+            aws s3 cp  s3://ansible-tests-0000/.env backend/
             tar -C backend -czvf artifact.tar.gz .
             echo ====================================
             ls -a

@@ -35,6 +35,14 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub backend-${ID}
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update -y
+          npm i
+          npm run build
+          pm2 stop default
+          pm2 start npm -- start
   MyEIP:
     Type: AWS::EC2::EIP
     DependsOn: EC2Instance
