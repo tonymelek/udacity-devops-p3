@@ -121,6 +121,9 @@ jobs:
           command: |
             mkdir -p workspace
       - run:
+          name: add old workflow id to workspace
+          command: aws cloudformation list-exports --query "Exports[?Name=='WorkflowID'].Value" --no-paginate --output text > workspace/old-id
+      - run:
           name: Install tar
           command: |
             yum update 
@@ -149,6 +152,7 @@ jobs:
           root: workspace
           paths:
             - backend-ip
+            - old-id
       - destroy-environment
   configure-infrastructure:
     docker:
@@ -213,12 +217,12 @@ jobs:
             BACKEND_IP="$(cat /tmp/workspace/backend-ip)"
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
-            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
-            cat frontend/.env
+            echo API_URL="http://${BACKEND_IP}:3030" > frontend/.env
       - run:
           name: Deploy frontend objects
           command: |
             cd frontend
+            cat .env
             npm install
             npm run build
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
@@ -239,10 +243,11 @@ jobs:
           name: Install Dependencies
           command: |
             apt update -y
-            apt install -y npm python3-pip ansible tar gzip
+            apt install -y npm python3-pip ansible tar gzip awscli
       - run:
           name: Deploy backend
           command: |
+            aws s3 cp  s3://ansible-tests-0000/.env backend/
             tar -C backend -czvf artifact.tar.gz .
             echo ====================================
             ls -a
@@ -302,11 +307,44 @@ jobs:
             aws cloudformation deploy --template-file .circleci/files/cloudfront.yml --stack-name udaPeople \
             --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
             --tags project=udapeople
+            aws cloudfront create-invalidation \
+              --distribution-id EMVR37B4ASY2Z \
+              --paths "/*"
             echo old stack name= udaPeople
             echo current workflow_id= "${CIRCLE_WORKFLOW_ID:0:7}"
       - destroy-environment
       - revert-migrations:
           workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
+  cleanup:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: |
+            yum update 
+            yum install -y tar gzip
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Remove old stacks and files
+          command: |
+            export OLD_WORKFLOW_ID=$(cat /tmp/workspace/old-id)
+            export NEW_WORKFLOW_ID="${CIRCLE_WORKFLOW_ID:0:7}"
+            echo $OLD_WORKFLOW_ID
+            echo $NEW_WORKFLOW_ID
+            if [[ "${NEW_WORKFLOW_ID}" != "${OLD_WORKFLOW_ID}" ]]
+            then
+            echo cleaning up ...
+            aws s3 rm "s3://udapeople-${OLD_WORKFLOW_ID}" --recursive
+            aws s3 rb s3://udapeople-"${OLD_WORKFLOW_ID}" --force 
+            aws cloudformation delete-stack --stack-name "udapeople-backend-${OLD_WORKFLOW_ID}"
+            aws cloudformation delete-stack --stack-name "udapeople-frontend-${OLD_WORKFLOW_ID}"
+            else
+            echo no cleanup required
+            fi
+
 workflows:
   default:
     jobs:
@@ -338,3 +376,5 @@ workflows:
           requires: [deploy-backend, deploy-frontend]
       - cloudfront-update:
           requires: [smoke-test]
+      - cleanup:
+          requires: [cloudfront-update]

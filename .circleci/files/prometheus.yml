@@ -1,0 +1,13 @@
+Description: "UdaPeople  Prometheus stack."
+Resources:
+  EC2Instance:
+    Properties:
+      ImageId: ami-068663a3c619dd892
+      InstanceType: t2.micro
+      KeyName: tony-new-hp
+      SecurityGroupIds:
+        - sg-0bad08b6957518541
+      Tags:
+        - Key: Name
+          Value: Prometheus
+    Type: "AWS::EC2::Instance"
