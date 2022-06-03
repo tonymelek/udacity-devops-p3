@@ -1,0 +1,2 @@
+URL01=https://github.com/tonymelek/udacity-devops-p3
+URL02=http://udapeople-a377159.s3-website-us-east-1.amazonaws.com
